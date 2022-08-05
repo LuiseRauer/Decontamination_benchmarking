@@ -128,7 +128,7 @@ otus_rel %>%
          axis.text.x = element_text(face = c("plain", rep(c("plain", "bold"), 4), rep("plain", 2)),
                                     colour = c("grey30", rep(c("grey30", "black"), 4), rep("grey30", 2)))) +
    scale_fill_manual(
-      "Genus", values = c(theme_colours[c(20, 5:9, 14, 10)], "grey80"))
+      "Genus", values = c(theme_colours[c(20, 21, 9, 18, 14, 5, 7, 23)], "grey80"))
 dev.off()
 
 # ------------------------------------------------------------------------------
@@ -300,7 +300,6 @@ p <-
    ggplot(aes(x = Cont_prev, y = Mean, colour = Filter, group = Filter)) +
    plot_theme +
    theme(panel.grid.major = element_line(colour = "#e0e0e0"),
-         #legend.spacing.y = unit(-0.1, 'cm'),
          legend.position = "none") +
    # Add base lines for Accuracy and Youden's index
    geom_abline(aes(slope = -Cont_prev_line, intercept = 1), colour = "black") +
@@ -354,7 +353,6 @@ p <-
    ggplot(aes(x = X_axis_prox, y = Mean, colour = Filter, fill = Filter)) +
    plot_theme +
    theme(panel.grid.major.y = element_line(colour = "#e0e0e0"),
-         legend.spacing.y = unit(-0.1, 'cm'),
          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
          axis.title.x = element_blank(),
          panel.grid.major.x = element_blank(),
