@@ -10,8 +10,10 @@
 
 # Load required packages
 library(tidyverse)
+library(cowplot) # plot_grid, get_legend
+library(ggpubr) # as_ggplot
 # Define directory
-file_directory <- "C:/Users/rauerlui/PhD/Sonstiges/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
+file_directory <- "C:/Users/rauerlui/PhD/Projects/02-Decontamination-benchmarking_2020-03/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 
 # Define a plot theme
 plot_theme <- theme(
@@ -96,7 +98,7 @@ rm(list = ls()[!ls() %in% c("file_directory", "otus", "otus_rel", "otus_taxa",
 # ------------------------------------------------------------------------------
 
 # https://stackoverflow.com/questions/63010394/superscript-in-axis-labels-in-ggplot2-for-ions
-svg("Taxonomy_even.svg", width = 6, height = 3.8)
+svg("Output/Plots/Taxonomy_even.svg", width = 6, height = 3.8)
 otus_rel %>% 
    t() %>% as.data.frame() %>% 
    # Merge with taxonomic information
@@ -196,8 +198,8 @@ rm(BM_decontam_freq)
 # Save the results
 # ------------------------------------------------------------------------------
 
-###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/Karstens_RObjects_BM_res"))
-###load(paste0(file_directory, "Output/Karstens_RObjects_BM_res"), verbose = TRUE)
+###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/Karstens_Benchm_res.RData"))
+###load(paste0(file_directory, "Output/R_objects/Karstens_Benchm_res.RData"), verbose = TRUE)
 
 ################################################################################
 #
@@ -285,7 +287,7 @@ combined_results["X_axis_prox"] <-
 # Supp. figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Karstens_BM_supp.svg"), 
+svg(paste0(file_directory, "Output/Plots/Benchm_even_supplement.svg"), 
     width = 9.1, height = 6.5) # width = 12, height = 6
 p <- 
    combined_results %>%
@@ -334,7 +336,7 @@ dev.off()
 # Main figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Karstens_BM_main_nolegend.svg"), 
+svg(paste0(file_directory, "Output/Plots/Benchm_even_main.svg"), 
     width = 8, height = 3.5) # height = 3.31
 p <- 
    combined_results %>%
@@ -437,9 +439,7 @@ for (i in c("MicrobIEM", "SourceTracker", "PresenceNEG2", "DecontamPrev",
       }
 }
 
-library(cowplot) # plot_grid, get_legend
-library(ggpubr) # as_ggplot
-svg(paste0(file_directory, "Output/Dmock_BM_legend.svg"),
+svg(paste0(file_directory, "Output/Plots/Benchm_legend.svg"),
     width = 1.8, height = 6.1)
 plot_grid(as_ggplot(get_legend(p6)), as_ggplot(get_legend(p5)),
           as_ggplot(get_legend(p4)), as_ggplot(get_legend(p3)), 
@@ -450,13 +450,15 @@ dev.off()
 # ------------------------------------------------------------------------------
 # Text data
 # ------------------------------------------------------------------------------
+
+# Contaminant prevalence per sample and NEG
 merge(t(otus_rel), Tax_class, by = 0) %>% 
    group_by(Contaminant) %>%
    summarise_at(.vars = c(Sample_IDs, "Blank"), .funs = sum) %>% 
    filter(Contaminant == "Contaminant") %>% 
    select(all_of(c(Sample_IDs, "Blank"))) %>% 
    t() %>% as.data.frame()
-# D0    0.0005011554
+#D0    0.0005011554
 #D1    0.0013879652
 #D2    0.0179780835
 #D3    0.0445470371
