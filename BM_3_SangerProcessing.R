@@ -5,8 +5,7 @@
 ################################################################################
 
 # Define directory
-file_directory <- 
-  "C:/Users/rauerlui/PhD/Sonstiges/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
+file_directory <- "C:/Users/rauerlui/PhD/Projects/02-Decontamination-benchmarking_2020-03/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 
 # Read ASV table
 Dmock_ASVtable <- read.csv(
@@ -98,4 +97,4 @@ Expected_seqs
 
 # Extract ASV IDs
 Expected_seqs <- unlist(Expected_seqs)
-rm(Sanger_list, file_directory, ratio, Sanger_seqs, Spec_ID, diff_replace_fun)
+rm(Sanger_list, ratio, Sanger_seqs, Spec_ID, diff_replace_fun)
