@@ -198,8 +198,8 @@ rm(BM_decontam_freq)
 # Save the results
 # ------------------------------------------------------------------------------
 
-###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/Karstens_Benchm_res.RData"))
-###load(paste0(file_directory, "Output/R_objects/Karstens_Benchm_res.RData"), verbose = TRUE)
+###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/Karstens_benchm_res.RData"))
+###load(paste0(file_directory, "Output/R_objects/Karstens_benchm_res.RData"), verbose = TRUE)
 
 ################################################################################
 #
