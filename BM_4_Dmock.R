@@ -134,7 +134,7 @@ otus_rel %>%
         axis.text.x = element_text(face = c("plain", rep("bold", 4), rep("plain", 5)),
                                    colour = c("grey30", rep("black", 4), rep("grey30", 5)))) +
   scale_fill_manual("Genus", values = c(
-    theme_colours[c(1, 20, 2, 4:11)], "grey80"))
+    theme_colours[c(1, 20, 11, 6, 21, 9, 18, 14, 5, 23, 3)], "grey80"))
 dev.off()
 
 # ------------------------------------------------------------------------------
