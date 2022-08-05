@@ -11,7 +11,7 @@
 # Load required packages
 library(tidyverse)
 # Define directory
-file_directory <- "C:/Users/rauerlui/PhD/Sonstiges/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
+file_directory <- "C:/Users/rauerlui/PhD/Projects/02-Decontamination-benchmarking_2020-03/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 
 # Define a plot theme
 plot_theme <- theme(
@@ -101,7 +101,7 @@ rm(list = ls()[!ls() %in% c("file_directory", "otus", "otus_rel", "otus_taxa",
 # Plot sample composition per dilution
 # ------------------------------------------------------------------------------
 
-svg("Taxonomy_staggered.svg", width = 5.6, height = 3.8)
+svg("Output/Plots/Taxonomy_staggered.svg", width = 5.6, height = 3.8)
 otus_rel %>% 
   t() %>% as.data.frame() %>% 
   # Merge with taxonomic information
@@ -202,8 +202,8 @@ rm(BM_decontam_freq)
 # Save the results
 # ------------------------------------------------------------------------------
 
-###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/Dmock_RObjects_BM"))
-###load(paste0(file_directory, "Output/Dmock_RObjects_BM"), verbose = TRUE)
+###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/Dmock_benchm_res.RData"))
+###load(paste0(file_directory, "Output/R_objects/Dmock_benchm_res.RData"), verbose = TRUE)
 
 ################################################################################
 #
@@ -297,7 +297,7 @@ combined_results["X_axis_prox"] <-
 # Supp. figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Dmock_BM_supp.svg"), 
+svg(paste0(file_directory, "Output/Plots/Benchm_staggered_supplement.svg"), 
     width = 9.1, height = 6.5) # width = 12, height = 6
 p <- 
   combined_results %>%
@@ -349,7 +349,7 @@ dev.off()
 # Main figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Dmock_BM_main_nolegend.svg"), 
+svg(paste0(file_directory, "Output/Plots/Benchm_staggered_main.svg"), 
     #width = 12, height = 4.4
     width = 8, height = 3.5)
 p <- 
@@ -400,6 +400,11 @@ p <-
 p
 dev.off()
 
+# ------------------------------------------------------------------------------
+# Text data
+# ------------------------------------------------------------------------------
+
+# Contaminant prevalence per sample and NEG
 merge(t(otus_rel), Tax_class, by = 0) %>% 
   group_by(Contaminant) %>%
   summarise_at(.vars = metadata$Sample_ID, .funs = sum) %>% 
