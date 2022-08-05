@@ -10,7 +10,7 @@
 # ------------------------------------------------------------------------------
 
 # Define directory
-file_directory <- "C:/Users/rauerlui/PhD/Sonstiges/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
+file_directory <- "C:/Users/rauerlui/PhD/Projects/02-Decontamination-benchmarking_2020-03/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 # Path of input FASTQ files
 path_input <- paste0(file_directory, "Input/DilutionMock/FASTQ")
 # Path for output
@@ -236,7 +236,8 @@ write.table(seqtab.final, file = paste0(file_directory, "Input/DilutionMock/Dmoc
 # ------------------------------------------------------------------------------
 
 # Save point: save all R objects
-###save(list = ls(), file = paste0(path_output, "/Dmock_RObjects_DADA2"))
+###save(list = ls(), file = paste0(path_output, "/R_objects/Dmock_DADA2_all.RData"))
+###load(paste0(path_output, "/R_objects/Dmock_DADA2_all.RData"), verbose = TRUE)
 
 # Tidy up the workspace
 rm(list = ls())
