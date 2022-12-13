@@ -101,7 +101,8 @@ rm(list = ls()[!ls() %in% c("file_directory", "otus", "otus_rel", "otus_taxa",
 # Plot sample composition per dilution
 # ------------------------------------------------------------------------------
 
-svg("Output/Plots/Taxonomy_staggered.svg", width = 5.6, height = 3.8)
+svg(paste0(file_directory, "Output/Plots/Taxonomy_staggered.svg"), 
+    width = 5.6, height = 3.8)
 otus_rel %>% 
   t() %>% as.data.frame() %>% 
   # Merge with taxonomic information

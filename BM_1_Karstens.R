@@ -98,7 +98,8 @@ rm(list = ls()[!ls() %in% c("file_directory", "otus", "otus_rel", "otus_taxa",
 # ------------------------------------------------------------------------------
 
 # https://stackoverflow.com/questions/63010394/superscript-in-axis-labels-in-ggplot2-for-ions
-svg("Output/Plots/Taxonomy_even.svg", width = 6, height = 3.8)
+svg(paste0(file_directory, "Output/Plots/Taxonomy_even.svg"), 
+    width = 6, height = 3.8)
 otus_rel %>% 
    t() %>% as.data.frame() %>% 
    # Merge with taxonomic information
