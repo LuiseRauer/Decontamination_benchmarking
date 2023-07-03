@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-BM_microbiem <- function(otus_rel, metadata, Mock_info, dmax) {
+BM_microbiem_ratio <- function(otus_rel, metadata, Mock_info, dmax) {
   
   # ------------------------------------------------------------------------------
   # Set up the workspace
@@ -45,7 +45,7 @@ BM_microbiem <- function(otus_rel, metadata, Mock_info, dmax) {
       contamdf <- MicrobIEM_decontamination(
         feature_table = as.data.frame(t(otus_rel)), SAMPLE = k_samples, 
         NEG2 = Control_vec, ratio_NEG2_threshold = i, span_NEG2_threshold = NA)
-      contamdf <- merge(t(otus_rel)[, k_samples, drop = FALSE], # !!!
+      contamdf <- merge(t(otus_rel)[, k_samples, drop = FALSE], 
                         contamdf[, "is_contaminant", drop = FALSE], 
                         by = 0, all.x = TRUE)
       contamdf <- merge(contamdf, Mock_info,
