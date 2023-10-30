@@ -39,4 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 # Internal files
-Internal_
+Internal_*
