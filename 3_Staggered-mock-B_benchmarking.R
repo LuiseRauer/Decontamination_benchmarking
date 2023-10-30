@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Decontamination benchmarking of the QZmock
+# Decontamination benchmarking - Staggered mock community B (Rauer & De Tomassi et al.)
 #
 ################################################################################
 
@@ -38,11 +38,11 @@ benchm_colours <-
     "#FAC771", "#EC921D", "#C45C11", "#6C2C0F", # orange - Decontam freq
     "#ECB8FF", "#C583E8", "#7C1CBB", "#2A0140", # purple - Decontam prev
     "#A8CE6B", "#50A33B", "#006618", # green - SourceTracker
-    "#333333", ##8a8a8a", # grey - presence filter
+    "#333333", # grey - presence filter
     "#C0C0C0", "#8E8E8E", "#5C5C5C", "#333333", # grey - MicrobIEM span
     "#94D8FF", "#37A1DE", "#0061B5", "#00346B") # blue - MicrobIEM ratio
 
-
+# Define colours for combined benchmarking of MicrobIEM ratio & span
 benchm_comb_colours <- c("#A9C8DA", "#6E9EB9", "#3F6383", "#183553", "black")
 
 # ------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ benchm_comb_colours <- c("#A9C8DA", "#6E9EB9", "#3F6383", "#183553", "black")
 # ------------------------------------------------------------------------------
 
 # Define otu table with count data (samples in rows, ASVs in columns)
-load(paste0(file_directory, "Input/Mock_spike_Rauer-de-Tomassi-et-al/SpikeMock_ASVtable.RData"), 
+load(paste0(file_directory, "Input/Mock_staggered-B_Rauer-de-Tomassi-et-al/Mock_staggered-B_ASVtable.RData"), 
      verbose = TRUE)
 otus_orig <- otus
 otus <- otus %>% 
@@ -63,7 +63,7 @@ otus_rel <- sweep(otus, 1, rowSums(otus), "/")
 all(rowSums(otus_rel) == 1) # Check
 
 # Create metadata
-load(paste0(file_directory, "Input/Mock_spike_Rauer-de-Tomassi-et-al/SpikeMock_Metadata.RData"), 
+load(paste0(file_directory, "Input/Mock_staggered-B_Rauer-de-Tomassi-et-al/Mock_staggered-B_Metadata.RData"), 
      verbose = TRUE)
 # Check that metafile and otu file have the same samples
 all(metadata$Sample_ID %in% row.names(otus))
@@ -93,8 +93,9 @@ otus_taxa["Genus"] <- gsub("_.*", "", otus_taxa$LV_4, perl = TRUE)
 # Plot sample composition per dilution
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Plots/F02_Taxonomy_spike.svg"), 
-    width = 3.75, height = 3.8)
+svg(paste0(file_directory, "Output/Plots/F02_Taxonomy_staggered-B.svg"), 
+    width = 3.75, # Legend kept for better aligning
+    height = 3.8)
 otus_rel %>% 
   t() %>% as.data.frame() %>% 
   # Merge with taxonomic information
@@ -124,7 +125,8 @@ otus_rel %>%
   ylab("Relative abundance") + ggtitle("Staggered mock community B") +
   plot_theme +
   scale_y_continuous(expand = c(0, 0)) +
-  theme(legend.text.align = 0,
+  theme(#legend.position = "none", # Remove to show legend, joint legend is added later
+        legend.text.align = 0,
         plot.title = element_text(size = rel(1.1), hjust = 0.5),
         axis.ticks.x = element_blank(),
         axis.text.x = element_text(face = c(rep("bold", 2), rep("plain", 2)),
@@ -136,6 +138,76 @@ otus_rel %>%
                "Imtechella" = expression(italic("Imtechella")),
                "Truepera" = expression(italic("Truepera"))))
 dev.off()
+
+# ------------------------------------------------------------------------------
+# Joint legend
+# ------------------------------------------------------------------------------
+
+p_tax <- otus_rel %>% 
+  t() %>% as.data.frame() %>% 
+  # Merge with taxonomic information
+  merge(., otus_taxa, by = 0, all.x = TRUE) %>% 
+  # Separate taxonomy by Gold standard information into mock and contaminant
+  mutate(Category = case_when(
+    grepl("Allob|Imtech|Truep", LV_4) & !is.na(Genus) ~ Genus,
+    Row.names %in% cross_cont_taxa ~ "Cross-contaminants",
+    TRUE ~ "Contaminants")) %>% 
+  # Summarise relative abundances by taxonomy (and sum up all contaminants)
+  group_by(Category) %>%
+  summarise_at(.vars = metadata$Sample_ID, .funs = sum) %>% 
+  # Transform data to long format
+  pivot_longer(all_of(metadata$Sample_ID)) %>%
+  # Merge with metadata 
+  merge(., metadata, by.x = "name", by.y = "Sample_ID", all = TRUE) %>%  # add
+  group_by(Category, Dilution) %>% # add
+  summarise(value = mean(value)) %>% # add
+  ungroup() %>%  # add
+  # Add fake row to separate samples and the control by an empty bar
+  add_row(Category = "Contaminants", Dilution = "", value = NA) %>%
+  mutate(Category = factor(Category, levels = c(
+    "Acinetobacter", "Allobacillus", "Bacillus", "Clostridium", "Cutibacterium", 
+    "Enterococcus", "Escherichia", "Imtechella", "Limosilactobacillus", 
+    "Listeria", "Pseudomonas", "Salmonella", "Staphylococcus", "Streptococcus", 
+    "Truepera", "Cross-contaminants", "Contaminants")),
+         Dilution = factor(Dilution, levels = c(paste0("D", 0:1), "", "NEG"))) %>%
+  ggplot(aes(x = Dilution, y = value, fill = Category)) +
+  geom_bar(stat = "identity") +
+  plot_theme +
+  theme(legend.text.align = 0,
+        legend.text = element_text(size = rel(1.1)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_fill_manual("Genus", values = c(
+    theme_colours[c(1, 27, 20, 11, 6, 21, 9, 28, 18, 14, 5, 7, 23, 3, 29)], 
+    "grey50", "grey80"),
+                    drop = FALSE,
+                    labels = c("Contaminants" = "Contaminants",
+                               "Cross-contaminants" = "Cross-contaminants",
+                               "Acinetobacter" = expression(italic("Acinetobacter")),
+                               "Bacillus" = expression(italic("Bacillus")),
+                               "Clostridium" = expression(italic("Clostridium")),
+                               "Cutibacterium" = expression(italic("Cutibacterium")),
+                               "Enterococcus" = expression(italic("Enterococcus")),
+                               "Escherichia" = expression(italic("Escherichia")),
+                               "Limosilactobacillus" = expression(italic("Limosilactobacillus")),
+                               "Listeria" = expression(italic("Listeria")), 
+                               "Pseudomonas" = expression(italic("Pseudomonas")),
+                               "Salmonella" = expression(italic("Salmonella")),
+                               "Staphylococcus" = expression(italic("Staphylococcus")),
+                               "Streptococcus" = expression(italic("Streptococcus")),
+                               "Allobacillus" = expression(italic("Allobacillus")),
+                               "Imtechella" = expression(italic("Imtechella")),
+                               "Truepera" = expression(italic("Truepera")))) #+
+  #guides(fill = guide_legend(ncol = 2))
+svg(paste0(file_directory, "Output/Plots/F02_Taxonomy_legend.svg"), 
+    width = 1.9, height = 4.45)
+as_ggplot(get_legend(p_tax))
+dev.off()
+
+################################################################################
+#
+# Running decontamination algorithms 
+#
+################################################################################
 
 # ------------------------------------------------------------------------------
 # Run SourceTracker
@@ -211,8 +283,8 @@ rm(BM_decontam_freq)
 # Save the results
 # ------------------------------------------------------------------------------
 
-###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/3_BM_spike_res.RData"))
-###load(paste0(file_directory, "Output/R_objects/3_BM_spike_res.RData"), verbose = TRUE)
+###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/3_BM_staggered-B_res.RData"))
+###load(paste0(file_directory, "Output/R_objects/3_BM_staggered-B_res.RData"), verbose = TRUE)
 
 ################################################################################
 #
@@ -276,7 +348,6 @@ combined_results$Filter <- factor(combined_results$Filter, levels = c(
   unique(res_decontprev_spike$Filter),
   unique(res_sourcetracker_spike$Filter),
   unique(res_negpresence_spike$Filter),
-  #unique(res_microbiemspan_spike$Filter),
   rev(c("MicrobIEM, span = 0.25", "MicrobIEM, span = 0.5", "MicrobIEM, span = 0.75",
     "MicrobIEM, span = 1")),
   unique(res_microbiemratio_spike$Filter)))
@@ -326,7 +397,7 @@ combined_results["X_axis_prox"] <-
 # Supp. figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Plots/S04_Benchm_spike_supp.svg"), 
+svg(paste0(file_directory, "Output/Plots/S04_Benchm_staggered-B_supp.svg"), 
     width = 9, height = 7.9) # width = 12, height = 6
 p <- 
   combined_results %>%
@@ -378,9 +449,9 @@ dev.off()
 # Main figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Plots/F03_Benchm_spike_main.svg"), 
+svg(paste0(file_directory, "Output/Plots/F03_Benchm_staggered-B_main.svg"), 
     #width = 12, height = 4.4
-    width = 4.29, height = 3.2)
+    width = 4.29, height = 3.48)
 p <- 
   combined_results %>%
   group_by(Method, Filter, Dilution, Measure, X_axis_prox) %>% 
@@ -436,7 +507,7 @@ dev.off()
 
 # Build legend per filter tool
 for (i in c("MicrobIEMRatio", "MicrobIEMSpan", "PresenceNEG2", "SourceTracker", 
-            "DecontamPrev", "DecontamFreq", "Frequency"
+            "DecontamPrev", "DecontamFreq", "Frequency", "placeholder"
 )) {
   p <- 
     combined_results %>%
@@ -473,10 +544,16 @@ for (i in c("MicrobIEMRatio", "MicrobIEMSpan", "PresenceNEG2", "SourceTracker",
                         labels = c("span = 4 of all", "span = 3 of all", 
                                    "span = 2 of all", "span = 1 of all")
                         )
+    p9 <- p + scale_colour_manual(name = "MicrobIEM (span)", values = benchm_colours[16:19],
+                                  labels = c("span = 12 of all", "span = 8 of all", 
+                                             "span = 4 of all", "span = 1 of all")) +
+      scale_fill_manual(name = "MicrobIEM (span)", values = benchm_colours[16:19],
+                        labels = c("span = 12 of all", "span = 8 of all", 
+                                   "span = 4 of all", "span = 1 of all"))
   }
   if (i == "PresenceNEG2") {
-    p3 <- p + scale_colour_manual(name = "Presence filter", values = benchm_colours[15]) +
-      scale_fill_manual(name = "Presence filter", values = benchm_colours[15])
+    p3 <- p + scale_colour_manual(name = "Presence filter", values = c(benchm_colours[15]), drop = F) +
+      scale_fill_manual(name = "Presence filter", values = c(benchm_colours[15]), drop = F)
   }
   if (i == "SourceTracker") {
     p4 <- p + scale_colour_manual(name = "SourceTracker", values = benchm_colours[12:14]) +
@@ -494,20 +571,69 @@ for (i in c("MicrobIEMRatio", "MicrobIEMSpan", "PresenceNEG2", "SourceTracker",
     p7 <- p + scale_colour_manual(name = "Frequency filter", values = benchm_colours) +
       scale_fill_manual(name = "Frequency filter", values = benchm_colours)
   }
+  if (i == "placeholder") {
+    p8 <- p + guides(color = guide_legend(override.aes = list(color = NA)))
+  }
 }
 
-svg(paste0(file_directory, "Output/Plots/Benchm_legend.svg"),
-    width = 1.8, height = 7)
+# Mock legends (main figure)
+svg(paste0(file_directory, "Output/Plots/F03_Benchm_legend1.svg"),
+    width = 2, height = 3.85)
+plot_grid(as_ggplot(get_legend(p7)), as_ggplot(get_legend(p6)), 
+          as_ggplot(get_legend(p5)), as_ggplot(get_legend(p8)),
+          ncol = 1, byrow = F, align = "v", 
+          rel_heights = c(0.91, 1.1, 1.1, 0.5))
+dev.off()
+svg(paste0(file_directory, "Output/Plots/F03_Benchm_legend2.svg"),
+    width = 2, height = 3.85)
+plot_grid(as_ggplot(get_legend(p4)), as_ggplot(get_legend(p3)), 
+          as_ggplot(get_legend(p2)), as_ggplot(get_legend(p1)), 
+          ncol = 1, byrow = F, align = "v", 
+          rel_heights = c(0.91, 0.55, 1.1, 1.1))
+dev.off()
+
+# Skin dataset legend
+svg(paste0(file_directory, "Output/Plots/F04_legend.svg"),
+    width = 2.5, height = 6.5) # 1.8, 7
+plot_grid(as_ggplot(get_legend(p7)), as_ggplot(get_legend(p6)), 
+          as_ggplot(get_legend(p5)), as_ggplot(get_legend(p4)), 
+          as_ggplot(get_legend(p3)), as_ggplot(get_legend(p9)), 
+          as_ggplot(get_legend(p1)), 
+          ncol = 1, align = "hv", 
+          rel_heights = c(0.91, 1.1, 1.1, 0.91, 0.55, 1.1, 1.1))
+dev.off()
+
+# Mock legend (supplementary figure)
+svg(paste0(file_directory, "Output/Plots/S04_Benchm_legend.svg"),
+    width = 2.5, height = 6.5) # 1.8, 7
 plot_grid(as_ggplot(get_legend(p7)), as_ggplot(get_legend(p6)), 
           as_ggplot(get_legend(p5)), as_ggplot(get_legend(p4)), 
           as_ggplot(get_legend(p3)), as_ggplot(get_legend(p2)), 
-          as_ggplot(get_legend(p1)), ncol = 1, 
-          align = "hv", rel_heights = c(0.91, 1.1, 1.1, 0.91, 0.55, 1.1, 1.1))
+          as_ggplot(get_legend(p1)), 
+          ncol = 1, align = "hv", 
+          rel_heights = c(0.91, 1.1, 1.1, 0.91, 0.55, 1.1, 1.1))
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Benchmarking of combination of MicrobIEM ratio and span filter
+# Text data
 # ------------------------------------------------------------------------------
+
+# Contaminant prevalence per sample and NEG
+merge(t(otus_rel), Tax_class, by = 0) %>% 
+  group_by(Contaminant) %>%
+  summarise_at(.vars = c(metadata$Sample_ID), .funs = sum) %>% 
+  filter(Contaminant == "Contaminant") %>% 
+  select(all_of(metadata$Sample_ID)) %>% 
+  t() %>% as.data.frame() %>% arrange(V1)
+# 1.8-55.5 % contamination in samples (without NEG2)
+
+median(c(0.22969236, 0.25546553, 0.43406308, 0.55474367))
+
+################################################################################
+#
+# Benchmarking of combination of MicrobIEM ratio and span filter
+#
+################################################################################
 
 # Check the amount of cross-contamination into negative controls
 merge(t(otus_rel), Tax_class, by = 0, all = TRUE) %>% 
@@ -526,11 +652,9 @@ res_microbiem_comb <- merge(
   metadata[, c("Sample_ID", "Dilution")],
   by.x = "Sample", by.y = "Sample_ID", all.x = TRUE)
 
-svg(paste0(file_directory, "Output/Plots/S03_Benchm_spike_MicrobIEM_supp.svg"), 
-    #width = 12, height = 4.4
+svg(paste0(file_directory, "Output/Plots/S03_Benchm_staggered-B_MicrobIEM_comb.svg"), 
     width = 6.49, height = 4.05)
 res_microbiem_comb %>% 
-  #filter(Sample != "550-BiomPsy-979") %>%
   separate(Filter, c("Ratio", "Span"), "; ") %>% 
   filter(!Ratio %in% c("MicrobIEM, ratio = 1.5")) %>%
   mutate(Accuracy = (TP + TN) / (TP + TN + FP + FN),
@@ -555,7 +679,6 @@ res_microbiem_comb %>%
                                                 "D1~(6~x~10^3)"))) %>% 
   group_by(Dilution, Span2, Ratio) %>%
   summarise(Youden = mean(Youden)) %>%
-  #View
   ggplot(., aes(x = Ratio, y = Youden, fill = Span2, colour = Span2)) +
   geom_col(position = position_dodge2(preserve = "single",
                                       padding = 0.18))+
@@ -578,25 +701,25 @@ res_microbiem_comb %>%
              size = 0.5)
 dev.off()
 
-####
-library(tidyverse)
-# Contaminant prevalence per sample and NEG
-merge(t(otus_rel), Tax_class, by = 0) %>% 
-  group_by(Contaminant) %>% #View
-  summarise_at(.vars = c(metadata$Sample_ID), .funs = sum) %>% 
-  filter(Contaminant == "Contaminant") %>% 
-  select(all_of(metadata$Sample_ID)) %>% 
-  t() %>% as.data.frame() %>% arrange(V1)
-# 1.8-55.5 % contamination
-
-median(c(0.22969236, 0.25546553, 0.43406308, 0.55474367))
-
 # ------------------------------------------------------------------------------
 # Export data for MicrobIEM
 # ------------------------------------------------------------------------------
 
+# Taxonomy per genus
 unique(otus_taxa$Genus)
+# Listeria: Bacteria;Firmicutes;Bacilli;Bacillales;Listeriaceae
+# Bacillus: Bacteria;Firmicutes;Bacilli;Bacillales;Bacillaceae
+# Pseudomonas: Bacteria;Proteobacteria;Gammaproteobacteria;Pseudomonadales;Pseudomonadaceae
+# Truepera: Bacteria;Deinococcus-Thermus;Deinococci;Deinococcales;Trueperaceae
+# Staphylococcus: Bacteria;Firmicutes;Bacilli;Bacillales;Staphylococcaceae
+# Salmonella: Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae
+# Enterococcus: Bacteria;Firmicutes;Bacilli;Lactobacillales;Enterococcaceae
+# Imtechella: Bacteria;Bacteroidetes;Flavobacteria;Flavobacteriales;Flavobacteriaceae
+# Escherichia: Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae
+# Lactobacillus: Bacteria;Firmicutes;Bacilli;Lactobacillales;Lactobacillaceae
+# Allobacillus: Bacteria;Firmicutes;Bacilli;Bacillales;Bacillaceae
 
+# Add taxonomic information
 taxonomy_microbIEM <- data.frame(
   Genus = c("Listeria", "Bacillus", "Pseudomonas", "Truepera", "Staphylococcus", 
             "Salmonella", "Enterococcus", "Imtechella", "Escherichia", 
@@ -614,21 +737,9 @@ taxonomy_microbIEM <- data.frame(
     "Bacteria;Firmicutes;Bacilli;Lactobacillales;Lactobacillaceae",
     "Bacteria;Firmicutes;Bacilli;Bacillales;Bacillaceae")
 )
-# Listeria: Bacteria;Firmicutes;Bacilli;Bacillales;Listeriaceae
-# Bacillus: Bacteria;Firmicutes;Bacilli;Bacillales;Bacillaceae
-# Pseudomonas: Bacteria;Proteobacteria;Gammaproteobacteria;Pseudomonadales;Pseudomonadaceae
-# Truepera: Bacteria;Deinococcus-Thermus;Deinococci;Deinococcales;Trueperaceae
-# Staphylococcus: Bacteria;Firmicutes;Bacilli;Bacillales;Staphylococcaceae
-# Salmonella: Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae
-# Enterococcus: Bacteria;Firmicutes;Bacilli;Lactobacillales;Enterococcaceae
-# Imtechella: Bacteria;Bacteroidetes;Flavobacteria;Flavobacteriales;Flavobacteriaceae
-# Escherichia: Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae
-# Lactobacillus: Bacteria;Firmicutes;Bacilli;Lactobacillales;Lactobacillaceae
-# Allobacillus: Bacteria;Firmicutes;Bacilli;Bacillales;Bacillaceae
 
 otus_taxa_microbIEM <- merge(otus_taxa %>% rownames_to_column("OTU_ID"), 
                              taxonomy_microbIEM, by = "Genus", all = TRUE)
-
 
 # Reformat otu table
 otus_microbIEM <- otus %>% t() %>% as.data.frame() %>%
@@ -637,10 +748,140 @@ otus_microbIEM <- otus %>% t() %>% as.data.frame() %>%
           OTU_ID = otus_taxa_microbIEM$OTU_ID,
           Taxonomy = with(otus_taxa_microbIEM, paste(Taxonomy, Genus, LV_4, 
                                                      sep = ";"))),
-        by.x = 0, by.y = "OTU_ID") %>% 
-  rename(OTU_ID = Row.names)
+        by.x = 0, by.y = "OTU_ID") %>% #View
+  dplyr::rename(OTU_ID = Row.names)
 
 write.table(metadata, sep = "\t", row.names = F,
             paste0(file_directory, "Output/Data-formatted-for-MicrobIEM/MicrobIEM_mock_staggered-B_metafile.txt"))
 write.table(otus_microbIEM, sep = "\t", row.names = F,
             paste0(file_directory, "Output/Data-formatted-for-MicrobIEM/MicrobIEM_mock_staggered-B_featurefile.txt"))
+
+################################################################################
+#
+# Precision-recall curves (evaluation of more thresholds)
+#
+################################################################################
+
+# Load script
+source(paste0(file_directory, "BM_all_prec-rec.R"))
+
+# ------------------------------------------------------------------------------
+# Run frequency filter
+# ------------------------------------------------------------------------------
+
+res_frequency_spike_PR <- BM_frequency_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  dmax = 1) 
+
+# ------------------------------------------------------------------------------
+# Run MicrobIEM ratio filter
+# ------------------------------------------------------------------------------
+
+res_microbiem_ratio_spike_PR <- BM_microbiem_ratio_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  dmax = 1)
+
+# ------------------------------------------------------------------------------
+# Run MicrobIEM span filter
+# ------------------------------------------------------------------------------
+
+res_microbiem_span_spike_PR <- BM_microbiem_span_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  dmax = 1)
+
+# ------------------------------------------------------------------------------
+# Run Decontam prevalence filter
+# ------------------------------------------------------------------------------
+
+res_decontprev_spike_PR <- BM_decontam_prev_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  per_dilution = TRUE, dmax = 1)
+
+# ------------------------------------------------------------------------------
+# Run Decontam frequency filter
+# ------------------------------------------------------------------------------
+
+res_decontfreq_spike_PR <- BM_decontam_freq_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  per_dilution = TRUE, dmax = 1)
+
+# ------------------------------------------------------------------------------
+# Run SourceTracker
+# ------------------------------------------------------------------------------
+
+print(Sys.time()) # takes 40 min
+res_SourceTracker_spike_PR <- BM_sourcetracker_PR(
+  file_directory = file_directory,
+  otus = otus, metadata = metadata, Mock_info = Tax_class, 
+  raref_depth = 1000)
+print(Sys.time())
+rm(BM_sourcetracker_PR)
+
+# ------------------------------------------------------------------------------
+# Save the results
+# ------------------------------------------------------------------------------
+
+###save(list = ls()[grepl("res_.*_PR", ls())], file = paste0(file_directory, "Output/R_objects/3_BM_staggered-B_prec-rec.RData"))
+###load(paste0(file_directory, "Output/R_objects/3_BM_staggered-B_prec-rec.RData"), verbose = TRUE)
+
+# ------------------------------------------------------------------------------
+# Evaluation and plotting of results 
+# ------------------------------------------------------------------------------
+
+# Combine all benchmarking results
+combined_results_PR <- Reduce(
+  rbind.data.frame, list(
+    data.frame(res_frequency_spike_PR, Method = "Frequency"),
+    data.frame(res_microbiem_ratio_spike_PR, Method = "MicrobIEMRatio"),
+    data.frame(res_microbiem_span_spike_PR, Method = "MicrobIEMSpan"),
+    data.frame(res_decontfreq_spike_PR, Method = "DecontamFreq"), 
+    data.frame(filter(res_SourceTracker_spike_PR, grepl(", a1", res_SourceTracker_spike_PR$Filter)), Method = "SourceTracker, a1"),
+    data.frame(filter(res_SourceTracker_spike_PR, grepl(", a2", res_SourceTracker_spike_PR$Filter)), Method = "SourceTracker, a2"),
+    data.frame(filter(res_SourceTracker_spike_PR, grepl(", b1", res_SourceTracker_spike_PR$Filter)), Method = "SourceTracker, b1"),
+    data.frame(res_decontprev_spike_PR, Method = "DecontamPrev")))
+
+# Calculate Accuracy, Sensitivity, Specificity, Youden's index, Matthews index
+combined_results_PR <- combined_results_PR %>%
+  mutate(Accuracy = (TP + TN) / (TP + TN + FP + FN),
+         Sensitivity = TP / (TP+FN),
+         Precision = TP / (TP+FP),
+         Specificity = TN / (TN+FP),
+         Youden = Sensitivity + Specificity - 1,
+         Matthews = (TP*TN - FP*FN) / sqrt((TP+FP)*(TP+FN)*(TN+FP)*(TN+FN)))
+
+# Replace NA values
+combined_results_PR <- combined_results_PR %>%
+  mutate(Precision = case_when(
+    (is.na(Precision) & TP == 0 & FP == 0 & TN > 0 & FN > 0) ~ 0,
+    TRUE ~ Precision))
+combined_results_PR <- combined_results_PR %>% 
+  mutate(Method = factor(Method, levels = c(
+    "Frequency", sort(unique(
+      combined_results_PR$Method[combined_results_PR$Method != "Frequency"])))))
+
+combined_results_PR %>% 
+  merge(., metadata, by.x = "Sample", by.y = "Sample_ID") %>%
+  group_by(Dilution, Filter, Method) %>%
+  summarise(Sensitivity = mean(Sensitivity, na.rm = T),
+            Precision = mean(Precision, na.rm= T)) %>%
+  mutate(Filter = gsub(".* = ", "", Filter, perl = T)) %>% 
+  ggplot(., aes(x = Sensitivity, y = Precision, label = Filter, colour = Dilution)) +
+  geom_point() + geom_line(aes(group = Dilution)) + 
+  geom_text(hjust = -0.2, vjust = 0, size = 2) +
+  facet_wrap(. ~ Method, nrow = 2,
+             labeller = labeller(Method = c("Frequency" = "Frequency filter",
+                                            "DecontamFreq" = "Decontam (freq.)",
+                                            "DecontamPrev" = "Decontam (prev.)",
+                                            "PresenceNEG2" = "Presence filter",
+                                            "MicrobIEMRatio" = "MicrobIEM (ratio)",
+                                            "MicrobIEMSpan" = "MicrobIEM (span)",
+                                            "SourceTracker, a1" = "SourceTracker (a1)",
+                                            "SourceTracker, a2" = "SourceTracker (a2)",
+                                            "SourceTracker, b1" = "SourceTracker (b1)"))) +
+  ggtitle("Staggered mock community B") +
+  scale_colour_manual(values = theme_colours[c(1, 3, 11, 5)]) +
+  plot_theme + theme(plot.title = element_text(size = rel(1.1))) +
+  scale_x_continuous(breaks = c(0, 0.5, 1), labels = c("0", "0.5", "1")) +
+  scale_y_continuous(breaks = c(0, 0.5, 1), labels = c("0", "0.5", "1"))
+ggsave(paste0(file_directory, "Output/Plots/S05_Prec-Rec_staggered-B.svg"),
+       width = 8.2, height = 4.5)

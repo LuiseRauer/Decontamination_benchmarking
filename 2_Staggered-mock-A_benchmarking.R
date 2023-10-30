@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Decontamination benchmarking on a staggered mock community (Dmock) 
+# Decontamination benchmarking - Staggered mock community A (Hülpüsch & Rauer et al.) 
 #
 ################################################################################
 
@@ -10,6 +10,7 @@
 
 # Load required packages
 library(tidyverse)
+
 # Define directory
 file_directory <- "C:/Users/rauerlui/PhD/Projects/2020-03_MicrobIEM/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 
@@ -35,10 +36,11 @@ benchm_colours <-
     "#FAC771", "#EC921D", "#C45C11", "#6C2C0F", # orange - Decontam freq
     "#ECB8FF", "#C583E8", "#7C1CBB", "#2A0140", # purple - Decontam prev
     "#A8CE6B", "#50A33B", "#006618", # green - SourceTracker
-    "#333333", ##8a8a8a", # grey - presence filter
+    "#333333", # grey - presence filter
     "#C0C0C0", "#8E8E8E", "#5C5C5C", "#333333", # grey - MicrobIEM span
     "#94D8FF", "#37A1DE", "#0061B5", "#00346B") # blue - MicrobIEM ratio
 
+# Define colours for combined benchmarking of MicrobIEM ratio & span
 benchm_comb_colours <- c("#A9C8DA", "#6E9EB9", "#3F6383", "#183553", "black")
 
 # ------------------------------------------------------------------------------
@@ -47,7 +49,7 @@ benchm_comb_colours <- c("#A9C8DA", "#6E9EB9", "#3F6383", "#183553", "black")
 
 # Load the R object that contains all data (ASV table, metadata, expected_seqs)
 load(paste0(file_directory, 
-            "/Input/Mock_staggered_Huelpuesch-Rauer-et-al/Mock_staggered.RData"), 
+            "/Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/Mock_staggered-A.RData"), 
      verbose = TRUE)
 
 # Define otu table with count data (samples in rows, ASVs in columns)
@@ -113,8 +115,9 @@ rm(list = ls()[!ls() %in% c("file_directory", "otus", "otus_rel", "otus_taxa",
 # Plot sample composition per dilution
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Plots/F02_Taxonomy_staggered.svg"), 
-    width = 5.6, height = 3.8)
+svg(paste0(file_directory, "Output/Plots/F02_Taxonomy_staggered-A.svg"), 
+    width = 3.96, # width = 5.6, 
+    height = 3.8)
 otus_rel %>% 
   t() %>% as.data.frame() %>% 
   # Merge with taxonomic information
@@ -143,7 +146,8 @@ otus_rel %>%
   ylab("Relative abundance") + ggtitle("Staggered mock community A") +
   plot_theme +
   scale_y_continuous(expand = c(0, 0)) +
-  theme(legend.text.align = 0,
+  theme(legend.position = "none", # Remove to show legend, joint legend is added later
+        legend.text.align = 0,
         plot.title = element_text(size = rel(1.1), hjust = 0.5),
         axis.ticks.x = element_blank(),
         axis.text.x = element_text(face = c("plain", rep("bold", 4), rep("plain", 5)),
@@ -163,6 +167,12 @@ otus_rel %>%
                "Staphylococcus" = expression(italic("Staphylococcus")),
                "Streptococcus" = expression(italic("Streptococcus"))))
 dev.off()
+
+################################################################################
+#
+# Running decontamination algorithms 
+#
+################################################################################
 
 # ------------------------------------------------------------------------------
 # Run SourceTracker
@@ -238,12 +248,12 @@ rm(BM_decontam_freq)
 # Save the results
 # ------------------------------------------------------------------------------
 
-###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/2_BM_staggered_res.RData"))
-###load(paste0(file_directory, "Output/R_objects/2_BM_staggered_res.RData"), verbose = TRUE)
+###save(list = ls()[grepl("res_", ls())], file = paste0(file_directory, "Output/R_objects/2_BM_staggered-A_res.RData"))
+###load(paste0(file_directory, "Output/R_objects/2_BM_staggered-A_res.RData"), verbose = TRUE)
 
 ################################################################################
 #
-# Combination of results 
+# Evaluation and plotting of results 
 #
 ################################################################################
 
@@ -303,7 +313,6 @@ combined_results$Filter <- factor(combined_results$Filter, levels = c(
   unique(res_decontprev_staggered$Filter),
   unique(res_sourcetracker_staggered$Filter),
   unique(res_negpresence_staggered$Filter),
-  #unique(res_microbiemspan_staggered$Filter),
   rev(c("MicrobIEM, span = 0.333333333333333", "MicrobIEM, span = 0.666666666666667",
     "MicrobIEM, span = 1")),
   unique(res_microbiemratio_staggered$Filter)))
@@ -353,7 +362,7 @@ combined_results["X_axis_prox"] <-
 # Supp. figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Plots/S04_Benchm_staggered_supp.svg"), 
+svg(paste0(file_directory, "Output/Plots/S04_Benchm_staggered-A_supp.svg"), 
     width = 9, height = 7.9) # width = 12, height = 6
 p <- 
   combined_results %>%
@@ -409,8 +418,8 @@ dev.off()
 # Main figure benchmarking
 # ------------------------------------------------------------------------------
 
-svg(paste0(file_directory, "Output/Plots/F03_Benchm_staggered_main.svg"), 
-    width = 8, height = 3.2)
+svg(paste0(file_directory, "Output/Plots/F03_Benchm_staggered-A_main.svg"), 
+    width = 8, height = 3.48)
 p <- 
   combined_results %>%
   group_by(Method, Filter, Dilution, Measure, X_axis_prox) %>% 
@@ -474,9 +483,11 @@ merge(t(otus_rel), Tax_class, by = 0) %>%
   select(all_of(metadata$Sample_ID)) %>% 
   t() %>% as.data.frame()
 
-# ------------------------------------------------------------------------------
+################################################################################
+#
 # Benchmarking of combination of MicrobIEM ratio and span filter
-# ------------------------------------------------------------------------------
+#
+################################################################################
 
 # Check the amount of cross-contamination into negative controls
 merge(t(otus_rel), Tax_class, by = 0, all = TRUE) %>% 
@@ -495,8 +506,7 @@ res_microbiem_comb <- merge(
   metadata[, c("Sample_ID", "Dilution")],
   by.x = "Sample", by.y = "Sample_ID", all.x = TRUE)
 
-svg(paste0(file_directory, "Output/Plots/S03_Benchm_staggered_MicrobIEM_supp.svg"), 
-    #width = 12, height = 4.4
+svg(paste0(file_directory, "Output/Plots/S03_Benchm_staggered-A_MicrobIEM_comb.svg"), 
     width = 8, height = 4.05)
 res_microbiem_comb %>% 
   separate(Filter, c("Ratio", "Span"), "; ") %>% 
@@ -524,7 +534,6 @@ res_microbiem_comb %>%
                                                   "D4~(1~x~10^5)"))) %>%
     group_by(Dilution, Span2, Ratio) %>%
   summarise(Youden = mean(Youden)) %>%
-  #View
   ggplot(., aes(x = Ratio, y = Youden, fill = Span2, colour = Span2)) +
   geom_col(position = position_dodge2(preserve = "single",
                                       padding = 0.18))+
@@ -566,3 +575,135 @@ write.table(metadata, sep = "\t", row.names = F,
             paste0(file_directory, "Output/Data-formatted-for-MicrobIEM/MicrobIEM_mock_staggered-A_metafile.txt"))
 write.table(otus_microbIEM, sep = "\t", row.names = F,
             paste0(file_directory, "Output/Data-formatted-for-MicrobIEM/MicrobIEM_mock_staggered-A_featurefile.txt"))
+
+################################################################################
+#
+# Precision-recall curves (evaluation of more thresholds)
+#
+################################################################################
+
+# Load script
+source(paste0(file_directory, "BM_all_prec-rec.R"))
+
+# ------------------------------------------------------------------------------
+# Run frequency filter
+# ------------------------------------------------------------------------------
+
+res_frequency_staggered_PR <- BM_frequency_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  dmax = 7)
+
+# ------------------------------------------------------------------------------
+# Run MicrobIEM ratio filter
+# ------------------------------------------------------------------------------
+
+res_microbiem_ratio_staggered_PR <- BM_microbiem_ratio_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  dmax = 7)
+
+# ------------------------------------------------------------------------------
+# Run MicrobIEM span filter
+# ------------------------------------------------------------------------------
+
+res_microbiem_span_staggered_PR <- BM_microbiem_span_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  dmax = 7)
+
+# ------------------------------------------------------------------------------
+# Run Decontam prevalence filter
+# ------------------------------------------------------------------------------
+
+res_decontprev_staggered_PR <- BM_decontam_prev_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  per_dilution = TRUE, dmax = 7)
+
+# ------------------------------------------------------------------------------
+# Run Decontam frequency filter
+# ------------------------------------------------------------------------------
+
+res_decontfreq_staggered_PR <- BM_decontam_freq_PR(
+  otus_rel = otus_rel, metadata = metadata, Mock_info = Tax_class, 
+  per_dilution = TRUE, dmax = 7)
+
+# ------------------------------------------------------------------------------
+# Run SourceTracker
+# ------------------------------------------------------------------------------
+
+print(Sys.time()) # takes 2.5-3 hours
+res_SourceTracker_staggered_PR <- BM_sourcetracker_PR(
+  file_directory = file_directory,
+  otus = otus, metadata = metadata, Mock_info = Tax_class, 
+  raref_depth = 1000)
+print(Sys.time())
+rm(BM_sourcetracker_PR)
+
+# ------------------------------------------------------------------------------
+# Save the results
+# ------------------------------------------------------------------------------
+
+###save(list = ls()[grepl("res_.*_PR", ls())], file = paste0(file_directory, "Output/R_objects/2_BM_staggered-A_prec-rec.RData"))
+###load(paste0(file_directory, "Output/R_objects/2_BM_staggered-A_prec-rec.RData"), verbose = TRUE)
+
+# ------------------------------------------------------------------------------
+# Evaluation and plotting of results 
+# ------------------------------------------------------------------------------
+
+# Combine all benchmarking results
+combined_results_PR <- Reduce(
+  rbind.data.frame, list(
+    data.frame(res_frequency_staggered_PR, Method = "Frequency"),
+    data.frame(res_microbiem_ratio_staggered_PR, Method = "MicrobIEMRatio"),
+    data.frame(res_microbiem_span_staggered_PR, Method = "MicrobIEMSpan") %>%
+      mutate(Filter = substring(Filter, 1, 22)),
+    data.frame(res_decontfreq_staggered_PR, Method = "DecontamFreq"), 
+    data.frame(filter(res_SourceTracker_staggered_PR, grepl(", a1", res_SourceTracker_staggered_PR$Filter)), Method = "SourceTracker, a1"),
+    data.frame(filter(res_SourceTracker_staggered_PR, grepl(", a2", res_SourceTracker_staggered_PR$Filter)), Method = "SourceTracker, a2"),
+    data.frame(filter(res_SourceTracker_staggered_PR, grepl(", b1", res_SourceTracker_staggered_PR$Filter)), Method = "SourceTracker, b1"),
+    data.frame(res_decontprev_staggered_PR, Method = "DecontamPrev")))
+
+# Calculate Accuracy, Sensitivity, Specificity, Youden's index, Matthews index
+combined_results_PR <- combined_results_PR %>%
+  mutate(Accuracy = (TP + TN) / (TP + TN + FP + FN),
+         Sensitivity = TP / (TP+FN),
+         Precision = TP / (TP+FP),
+         Specificity = TN / (TN+FP),
+         Youden = Sensitivity + Specificity - 1,
+         Matthews = (TP*TN - FP*FN) / sqrt((TP+FP)*(TP+FN)*(TN+FP)*(TN+FN)))
+
+# Replace NA values
+combined_results_PR <- combined_results_PR %>%
+  mutate(Precision = case_when(
+    (is.na(Precision) & TP == 0 & FP == 0 & TN > 0 & FN > 0) ~ 0,
+    TRUE ~ Precision))
+combined_results_PR <- combined_results_PR %>% 
+  mutate(Method = factor(Method, levels = c(
+    "Frequency", sort(unique(
+      combined_results_PR$Method[combined_results_PR$Method != "Frequency"])))))
+
+combined_results_PR %>% 
+  merge(., metadata, by.x = "Sample", by.y = "Sample_ID") %>%
+  filter(Dilution %in% c("D1", "D2", "D3", "D4")) %>%
+  group_by(Dilution, Filter, Method) %>%
+  summarise(Sensitivity = mean(Sensitivity, na.rm = T),
+            Precision = mean(Precision, na.rm= T)) %>%
+  mutate(Filter = gsub(".* = ", "", Filter, perl = T)) %>% 
+  ggplot(., aes(x = Sensitivity, y = Precision, label = Filter, colour = Dilution)) +
+  geom_point() + geom_line(aes(group = Dilution)) + 
+  geom_text(hjust = -0.2, vjust = 0, size = 2) +
+  facet_wrap(. ~ Method, nrow = 2,
+             labeller = labeller(Method = c("Frequency" = "Frequency filter",
+                                            "DecontamFreq" = "Decontam (freq.)",
+                                            "DecontamPrev" = "Decontam (prev.)",
+                                            "PresenceNEG2" = "Presence filter",
+                                            "MicrobIEMRatio" = "MicrobIEM (ratio)",
+                                            "MicrobIEMSpan" = "MicrobIEM (span)",
+                                            "SourceTracker, a1" = "SourceTracker (a1)",
+                                            "SourceTracker, a2" = "SourceTracker (a2)",
+                                            "SourceTracker, b1" = "SourceTracker (b1)"))) +
+  ggtitle("Staggered mock community A") +
+  scale_colour_manual(values = theme_colours[c(1, 3, 11, 5)]) +
+  plot_theme + theme(plot.title = element_text(size = rel(1.1))) +
+  scale_x_continuous(breaks = c(0, 0.5, 1), labels = c("0", "0.5", "1")) +
+  scale_y_continuous(breaks = c(0, 0.5, 1), labels = c("0", "0.5", "1"))
+ggsave(paste0(file_directory, "Output/Plots/S05_Prec-Rec_staggered-A.svg"),
+       width = 8.2, height = 4.5)
