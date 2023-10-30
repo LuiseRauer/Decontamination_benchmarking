@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Contamination removal benchmarking - MicrobIEM ratio filter 
+# Contamination removal benchmarking - MicrobIEM span filter 
 #
 ################################################################################
 
@@ -29,11 +29,12 @@ BM_microbiem_span <- function(otus_rel, metadata, Mock_info, dmax) {
   # ------------------------------------------------------------------------------
   
   # Create an empty dataframe for results
-  res_MicrobiemRatio <- 
+  res_MicrobiemSpan <- 
     setNames(data.frame(matrix(ncol = 6, nrow = 0)), 
              c("Sample", "TP", "TN", "FP", "FN", "Filter"))
   
   thresholds <- seq(0, 1, 1/length(Control_vec))[2:(length(Control_vec)+1)]
+  
   for (i in thresholds) {
     #i = 5
     # Select only one dilution
@@ -68,12 +69,12 @@ BM_microbiem_span <- function(otus_rel, metadata, Mock_info, dmax) {
       if(all(is.na(FN))) {FN = rep(0, length(k_samples))} 
       if(all(is.na(TP))) {TP = rep(0, length(k_samples))} 
       if(all(is.na(FP))) {FP = rep(0, length(k_samples))} 
-      res_MicrobiemRatio <- 
-        rbind.data.frame(res_MicrobiemRatio,
+      res_MicrobiemSpan <- 
+        rbind.data.frame(res_MicrobiemSpan,
                          data.frame(Sample = k_samples,
                                     TP = TP, TN = TN, FP = FP, FN = FN,
                                     Filter = paste0("MicrobIEM, span = ", i)))
     }
   }
-  return(res_MicrobiemRatio)
+  return(res_MicrobiemSpan)
 }

@@ -1,11 +1,11 @@
 ################################################################################
 #
-# Contamination removal benchmarking - Identifying correct ASV with Sanger data 
+# Contamination removal benchmarking - Identifying correct ASVs with Sanger data 
 #
 ################################################################################
 
 # Define directory
-file_directory <- "C:/Users/rauerlui/PhD/Projects/02-Decontamination-benchmarking_2020-03/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
+file_directory <- "C:/Users/rauerlui/PhD/Projects/2020-03_MicrobIEM/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 
 # Read ASV table
 Dmock_ASVtable <- read.csv(
@@ -86,6 +86,7 @@ Sanger_seqs <- unlist(lapply(Sanger_list, diff_replace_fun))
 
 # Count the number of ambiguous basecalls
 str_count(Sanger_seqs, "\\.")
+str_count(substr(Sanger_seqs[1:15], 68, 430), "\\.")
 
 # Extract the names of expected ASVs, checking in mid part of sequence according to low quality in chromatograms
 Expected_seqs <- sapply(substr(Sanger_seqs[1:15], 68, 430), function(x) # 68, 430
