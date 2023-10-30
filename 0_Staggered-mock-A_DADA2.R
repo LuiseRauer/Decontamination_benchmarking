@@ -1,7 +1,6 @@
 ################################################################################
 #
-# Microbiome FASTQ denoising with DADA2 (v1.16) for Dmock (staggered mock)
-#   based on: https://benjjneb.github.io/dada2/tutorial.html (2021-07-14) &
+# Microbiome FASTQ denoising with DADA2 (v1.16) for Staggered mock A &
 # ASV classification with Sanger sequencing data
 #
 ################################################################################
@@ -13,7 +12,7 @@
 # Define directory
 file_directory <- "C:/Users/rauerlui/PhD/Projects/2020-03_MicrobIEM/2022.07 Decontamination benchmarking/Decontamination_benchmarking/"
 # Path of input FASTQ files
-path_input <- paste0(file_directory, "Input/Mock_staggered_Huelpuesch-Rauer-et-al/FASTQ")
+path_input <- paste0(file_directory, "Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/FASTQ")
 # Path for output
 path_output <- paste0(file_directory, "Output")
 # Define pattern for distinguishing forward and reverse FASTQ file names
@@ -92,9 +91,9 @@ plotQualityProfile(fnRs[1:10]) +
 # ------------------------------------------------------------------------------
 
 # Create names for filtered files and for a subdirectory of your output folder
-filtFs <- file.path(path_output, "Mock_staggered_filtered", 
+filtFs <- file.path(path_output, "Mock_staggered-A_filtered", 
                     paste0(sample.names, "_F_filt.fastq.gz"))
-filtRs <- file.path(path_output, "Mock_staggered_filtered", 
+filtRs <- file.path(path_output, "Mock_staggered-A_filtered", 
                     paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
@@ -221,32 +220,16 @@ rownames(seqtab.final) <- NULL
 
 # Export to Excel
 write.table(seqtab.final, file = paste0(
-  file_directory, "Input/Mock_staggered_Huelpuesch-Rauer-et-al/Mock_staggered_ASVs.csv"), 
+  file_directory, "Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/Mock_staggered-A_ASVs.csv"), 
   quote = FALSE, sep = ";", row.names = FALSE)
-
-# ------------------------------------------------------------------------------
-# File export in standard MicrobIEM format
-# ------------------------------------------------------------------------------
-
-# Please first run the commands of the previous steps under "Useful format"
-# Collapse taxonomy columns
-###seqtab.microbIEM <- seqtab.final
-###seqtab.microbIEM["Taxonomy"] <- apply(
-###  seqtab.final[c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", 
-###                 "Species")], 1, function(x) paste(x, collapse = ";"));
-###seqtab.microbIEM[c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", 
-###                   "Species", "Sequence")] <- NULL
-###write.table(seqtab.microbIEM, file = "Proj_ASVtable_MicrobIEM.txt", 
-###            quote = FALSE, sep = "\t", row.names = FALSE)
-###rm(seqtab.microbIEM)
 
 # ------------------------------------------------------------------------------
 # Save results
 # ------------------------------------------------------------------------------
 
 # Save point: save all R objects
-###save(list = ls(), file = paste0(path_output, "/R_objects/0_Prep_staggered_DADA2.RData"))
-###load(paste0(path_output, "/R_objects/0_Prep_staggered_DADA2.RData"), verbose = TRUE)
+###save(list = ls(), file = paste0(path_output, "/R_objects/0_DADA2_staggered-A.RData"))
+###load(paste0(path_output, "/R_objects/0_DADA2_staggered-A.RData"), verbose = TRUE)
 
 ################################################################################
 #
@@ -259,7 +242,7 @@ write.table(seqtab.final, file = paste0(
 # ------------------------------------------------------------------------------
 
 # Path of input FASTQ files (must be demultiplexed, can be fastq.gz)
-path_sanger <- paste0(file_directory, "Input/Mock_staggered_Huelpuesch-Rauer-et-al/SangerSequences/")
+path_sanger <- paste0(file_directory, "Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/SangerSequences/")
 
 # List all files in the input directory
 list.files(path_sanger)
@@ -295,7 +278,7 @@ Spec_ID <- Spec_ID[order(Spec_ID)]
 for (i in 1:length(Sanger_list)) {
   chromatogram(Sanger_list[[i]], width = 100, height = 2, trim5 = 0, trim3 = 0, 
                showcalls = "both", filename = paste0(
-                 file_directory, "Output/Mock_staggered_chromatograms/Chroma_", 
+                 file_directory, "Output/Mock_staggered-A_chromatograms/Chroma_", 
                  Spec_ID[i], ".pdf"))
 }
 rm(i)
@@ -393,11 +376,11 @@ Expected_seqs_list
 
 # Create metadata
 metadata <- read.delim(paste0(
-  file_directory, "Input/Mock_staggered_Huelpuesch-Rauer-et-al/Dmock_Metadata.txt"), check.names = FALSE)
+  file_directory, "Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/Mock_staggered-A_Metadata.txt"), check.names = FALSE)
 
 # Save point: save all R objects
-###save(seqtab.final, Expected_seqs, metadata, file = paste0(file_directory, "/Input/Mock_staggered_Huelpuesch-Rauer-et-al/Mock_staggered.RData"))
-###load(paste0(file_directory, "/Input/Mock_staggered_Huelpuesch-Rauer-et-al/Mock_staggered.RData"), verbose = TRUE)
+###save(seqtab.final, Expected_seqs, metadata, file = paste0(file_directory, "/Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/Mock_staggered-A.RData"))
+###load(paste0(file_directory, "/Input/Mock_staggered-A_Huelpuesch-Rauer-et-al/Mock_staggered-A.RData"), verbose = TRUE)
 
 # Tidy up the workspace
 rm(list = ls())
