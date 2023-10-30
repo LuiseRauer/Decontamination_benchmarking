@@ -1,0 +1,16 @@
+ID Sanger sequencing;ID ZIEL;Species;Phylum;Class;Order;Family;Genus;Gram stain
+S01;G9391;Acinetobacter baumannii;Proteobacteria;Gammaproteobacteria;Pseudomonadales;Moraxellaceae;Acinetobacter;Negative
+S02;G6352;Bacillus cereus ;Firmicutes;Bacilli;Bacillales;Bacillaceae;Bacillus;Positive
+S03;G3260;Bacillus subtilis;Firmicutes;Bacilli;Bacillales;Bacillaceae;Bacillus;Positive
+S04;G9497;Clostridium beijerinckii ;Firmicutes;Clostridia;Clostridiales;Clostridiaceae;Clostridium;Positive
+S05;G9776;Enterococcus faecalis;Firmicutes;Bacilli;Lactobacillales;Enterococcaceae;Enterococcus;Positive
+S06;G8985;Escherichia coli ;Proteobacteria;Gammaproteobacteria;Enterobacterales;Enterobacteriaceae;;Negative
+S07;G657;Lactobacillus reuteri ;Firmicutes;Bacilli;Lactobacillales;Lactobacillaceae;Lactobacillus;Positive
+S08;G1702;Listeria monocytogenes;Firmicutes;Bacilli;Bacillales;Listeriaceae;Listeria;Positive
+S09;G9716;Cutibacterium acnes ;Actinobacteria;Actinobacteria;Propionibacteriales;Propionibacteriaceae;Cutibacterium;Positive
+S10;G9034;Pseudomonas aeruginosa ;Proteobacteria;Gammaproteobacteria;Pseudomonadales;Pseudomonadaceae;Pseudomonas;Negative
+S11;G9703;Staphylococcus aureus ;Firmicutes;Bacilli;Bacillale;Staphylococcaceae;Staphylococcus;Positive
+S12;G9342;Staphylococcus epidermidis ;Firmicutes;Bacilli;Bacillale;Staphylococcaceae;Staphylococcus;Positive
+S13;G9343;Staphylococcus hominis;Firmicutes;Bacilli;Bacillale;Staphylococcaceae;Staphylococcus;Positive
+S14;G3649;Streptococcus mutans;Firmicutes;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus;Positive
+S15;G4622;Streptococcus pneumoniae;Firmicutes;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus;Positive
