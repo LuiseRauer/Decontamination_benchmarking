@@ -41,3 +41,5 @@ vignettes/*.pdf
 # Internal files
 Internal_*
 Old_*
+*filt.fastq.gz
+*chroma*
