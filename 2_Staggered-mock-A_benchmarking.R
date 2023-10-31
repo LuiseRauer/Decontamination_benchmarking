@@ -697,9 +697,9 @@ combined_results_PR %>%
                                             "PresenceNEG2" = "Presence filter",
                                             "MicrobIEMRatio" = "MicrobIEM (ratio)",
                                             "MicrobIEMSpan" = "MicrobIEM (span)",
-                                            "SourceTracker, a1" = "SourceTracker (a1)",
-                                            "SourceTracker, a2" = "SourceTracker (a2)",
-                                            "SourceTracker, b1" = "SourceTracker (b1)"))) +
+                                            "SourceTracker, a1" = "SourceTracker (alpha1)",
+                                            "SourceTracker, a2" = "SourceTracker (alpha2)",
+                                            "SourceTracker, b1" = "SourceTracker (beta)"))) +
   ggtitle("Staggered mock community A") +
   scale_colour_manual(values = theme_colours[c(1, 3, 11, 5)]) +
   plot_theme + theme(plot.title = element_text(size = rel(1.1))) +
